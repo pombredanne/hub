@@ -1,5 +1,107 @@
-## master
+## 1.10.5 (2013-03-02)
 
+* helpful `pull-request` error message when base project is invalid
+* fix `compare` for ranges containing "owner:branch" notation
+* enable `--name` argument for `submodule add`
+
+## 1.10.4 (2012-12-29)
+
+* fixes for Windows
+* display more validation errors on GitHub API failures
+* persist correctly capitalized GitHub login name
+
+## 1.10.3 (2012-11-22)
+
+* fix `browse` on Windows
+* fix hub on JRuby
+* try fixing Ruby 1.8.7 error with API requests
+* fix various edge cases around `create` command
+* have `fork` set up a remote even if own fork already exists
+* fix `pull-request` with Unicode chars on Ruby 1.8
+* respect $GITHUB_USER & $GITHUB_PASSWORD
+* improve reading git remotes configuration
+
+## 1.10.2 (2012-07-24)
+
+* fix pushing multiple refs to multiple remotes
+* support ssh.github.com
+* security: mode for ~/.config/hub is 0600
+* fix integration with GitHub Enterprise API
+* fix cloning repos that start with a period
+
+## 1.10.1 (2012-05-28)
+
+* don't choke on empty config file
+* fix `browse` when not in git repo
+
+## 1.10.0 (2012-05-08)
+
+* improve improved help text
+* fix GitHub username prompt in `create` command
+* make `fetch` command work with private repos too
+* add `merge` command to merge pull requests
+
+## 1.9.0 (2012-05-04)
+
+* internal refactoring and code reorganization
+* switch to GitHub API v3 and authenticate via OAuth
+* auth info is now stored in ~/.config/hub instead of ~/.gitconfig
+
+## 1.8.4 (2012-03-20)
+
+* add bash, zsh completion
+* improve `hub alias` command
+* change `git fork` so it fails when repo already exists under user
+* teach custom commands to respect `-h` & `--help` flags
+* `pull-request`: better error message for invalid remotes/URLs
+* respect local SSH aliases for host names
+
+## 1.8.3 (2012-03-02)
+
+* fix `pull-request` from branch tracking another local branch
+* fix `browse` command when not on any branch
+
+## 1.8.2 (2012-02-07)
+
+* if `pull-request` editor is vim, set appropriate filetype
+* `pull-request` editor message defaults to single commit message
+* fix cherry-picking from an existing remote
+* fix `clone` from local repository
+* `checkout` command forwards flags to internal checkout command,
+  force-resets the existing local branch by default
+* fix `am` command when given URLs that include the fragment
+
+## 1.8.1 (2012-01-24)
+
+* fix JSON parsing error while using GitHub API
+* HTTP(S) proxy support
+
+## 1.8.0 (2012-01-03)
+
+* fix `pull-request` on GH Enterprise project branch without upstream
+* ensure Content-Length for POST requests
+* handle pull requests from private repos
+* support branches with slashes in their name
+* display server errors when creating pullrequest fails
+* support GitHub Enterprise via multiple whitelisted host names
+* GitHub remote urls don't have to necessarily end in ".git"
+* fix `git init -g`
+* authenticate all API requests, helps dealing with private repos
+* ensure periods are allowed in repository names
+* fix am/apply commands if TMPDIR environment variable isn't set
+
+## 1.7.0 (2011-11-24)
+
+* lock down standalone script to system ruby
+* don't try to use command output pager on Windows
+* opt in for HTTPS: `git config hub.protocol https`
+* add `hub pull-request`
+* improve detecting upstream configuration ("tracking" branches)
+* introduce `hub --noop`
+* `hub apply` now downloads GitHub patches same as `hub am`
+* `hub create <name>` to explicitly name a repository
+* switch API communication to HTTPS
+* better handling of API HTTP exceptions
 * replace two dots (`sha1..sha2`) with three for ranges in `compare`
 * avoid ugly error & stack trace when git is not found on the system
 

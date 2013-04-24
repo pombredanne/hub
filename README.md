@@ -1,120 +1,166 @@
-hub: git + hub = github
-=======================
+git + hub = github
+==================
 
-`hub` is a command line utility which adds GitHub knowledge to `git`.
+hub is a command line tool that wraps `git` in order to extend it with extra
+features and commands that make working with GitHub easier.
 
-It can be used on its own or as a `git` wrapper.
+~~~ sh
+$ hub clone rtomayko/tilt
 
-Normal:
+# expands to:
+$ git clone git://github.com/rtomayko/tilt.git
+~~~
 
-    $ hub clone rtomayko/tilt
-
-    Expands to:
-    $ git clone git://github.com/rtomayko/tilt.git
-
-Wrapping `git`:
-
-    $ git clone rack/rack
-
-    Expands to:
-    $ git clone git://github.com/rack/rack.git
-
-hub requires you have `git` installed and in your `$PATH`. It also
-requires Ruby 1.8.6+ or Ruby 1.9.1+. No other libraries necessary.
+hub is best aliased as `git`, so you can type `$ git <command>` in the shell and
+get all the usual `hub` features. See "Aliasing" below.
 
 
-Install
--------
+Installation
+------------
 
-### Standalone
+Dependencies:
 
-`hub` is most easily installed as a standalone script:
-
-    curl http://defunkt.io/hub/standalone -sLo ~/bin/hub &&
-    chmod 755 ~/bin/hub
-
-Assuming `~/bin/` is in your `$PATH`, you're ready to roll:
-
-    $ hub version
-    git version 1.7.0.4
-    hub version 1.1.0
+* **git 1.7.3** or newer
+* **Ruby 1.8.6** or newer
 
 ### Homebrew
 
-    $ brew install hub
-    $ which hub
-    /usr/local/bin/hub
-    $ hub version
-    ...
+Installing on OS X is easiest with Homebrew:
+
+~~~ sh
+$ brew install hub
+~~~
+
+### Standalone
+
+`hub` is easily installed as a standalone script:
+
+~~~ sh
+$ curl http://defunkt.io/hub/standalone -sLo ~/bin/hub &&
+  chmod +x ~/bin/hub
+~~~
+
+Assuming "~/bin/" is in your `$PATH`, you're ready to roll:
+
+~~~ sh
+$ hub version
+git version 1.7.6
+hub version 1.8.3
+~~~
+
+#### On Windows
+
+If you have mysysgit, open "Git Bash" and follow the steps above but put the
+`hub` executable in `/bin` instead of `~/bin`.
+
+Avoid aliasing hub as `git` due to the fact that mysysgit automatically
+configures your prompt to include git information, and you want to avoid slowing
+that down. See [Is your shell prompt slow?](#is-your-shell-prompt-slow)
 
 ### RubyGems
 
-Though not recommended, `hub` can also be installed as a RubyGem:
+Though not recommended, hub can also be installed as a RubyGem:
 
-    $ gem install hub
+~~~ sh
+$ gem install hub
+~~~
 
 (It's not recommended for casual use because of the RubyGems startup
 time. See [this gist][speed] for information.)
 
-### Standalone via RubyGems
+#### Standalone via RubyGems
 
-    $ gem install hub
-    $ hub hub standalone > ~/bin/hub && chmod 755 ~/bin/hub
+~~~ sh
+$ gem install hub
+$ hub hub standalone > ~/bin/hub && chmod +x ~/bin/hub
+~~~
 
 This installs a standalone version which doesn't require RubyGems to
-run.
+run, so it's faster.
 
 ### Source
 
 You can also install from source:
 
-    $ git clone git://github.com/defunkt/hub.git
-    $ cd hub
-    $ rake install prefix=/usr/local
+~~~ sh
+$ git clone git://github.com/defunkt/hub.git
+$ cd hub
+$ rake install prefix=/usr/local
+~~~
 
-### Help! It's Slow!
+### Help! It's slow!
 
-Is your prompt slow? It may be hub.
+#### Is `hub` noticeably slower than plain git?
 
-1. Check that it's **not** installed using RubyGems.
-2. Check that RUBYOPT isn't loading anything shady:
+That is inconvenient, especially if you want to alias hub as `git`. Few things
+you can try:
 
-       $ echo $RUBYOPT
+* Find out which ruby is used for the hub executable:
 
-3. Check that your system Ruby is speedy:
+    ``` sh
+    head -1 `which hub`
+    ```
 
-       $ time /usr/bin/env ruby -e0
+* That ruby should be speedy. Time it with:
 
-If #3 is slow, it may be your [GC settings][gc].
+    ``` sh
+    time /usr/bin/ruby -e0
+    #=> it should be below 0.01 s total
+    ```
+
+* Check that Ruby isn't loading something shady:
+
+    ``` sh
+    echo $RUBYOPT
+    ```
+
+* Check your [GC settings][gc]
+
+General recommendation: you should change hub's shebang line to run with system
+ruby (usually `/usr/bin/ruby`) instead of currently active ruby (`/usr/bin/env
+ruby`). Also, Ruby 1.8 is speedier than 1.9.
+
+#### Is your shell prompt slow?
+
+Does your prompt show git information? Hub may be slowing down your prompt.
+
+This can happen if you've aliased hub as `git`. This is fine when you use `git`
+manually, but may be unacceptable for your prompt, which doesn't need hub
+features anyway!
+
+The solution is to identify which shell functions are calling `git`, and replace
+each occurrence of that with `command git`. This is a shell feature that enables
+you to call a command directly and skip aliases and functions wrapping it.
 
 
 Aliasing
 --------
 
-`hub` works best when it wraps `git`. This is not dangerous - your
-normal git commands should all work. hub merely adds some sugar.
+Using hub feels best when it's aliased as `git`. This is not dangerous; your
+_normal git commands will all work_. hub merely adds some sugar.
 
-Typing `hub alias <shell>` will display alias instructions for
-your shell. `hub alias` alone will show the known shells.
+`hub alias` displays instructions for the current shell. With the `-s` flag, it
+outputs a script suitable for `eval`.
 
-For example:
+You should place this command in your `.bash_profile` or other startup script:
 
-    $ hub alias bash
-    Run this in your shell to start using `hub` as `git`:
-      alias git=hub
+~~~ sh
+eval "$(hub alias -s)"
+~~~
 
-You should place this command in your `.bash_profile` or other startup
-script to ensure runs on login.
+### Shell tab-completion
 
-The alias command can also be eval'd directly using the `-s` flag:
+hub repository contains tab-completion scripts for bash and zsh. These scripts
+complement existing completion scripts that ship with git.
 
-    $ eval `hub alias -s bash`
+* [hub bash completion](https://github.com/defunkt/hub/blob/master/etc/hub.bash_completion.sh)
+* [hub zsh completion](https://github.com/defunkt/hub/blob/master/etc/hub.zsh_completion)
 
 
 Commands
 --------
 
-Assuming you've aliased `hub` to `git` the following commands now have
+Assuming you've aliased hub as `git`, the following commands now have
 superpowers:
 
 ### git clone
@@ -126,10 +172,7 @@ superpowers:
     > git clone git@github.com:schacon/ticgit.git
 
     $ git clone resque
-    > git clone git://github.com/YOUR_USER/resque.git
-
-    $ git clone -p resque
-    > git clone git@github.com:YOUR_USER/resque.git
+    > git clone git@github.com/YOUR_USER/resque.git
 
 ### git remote add
 
@@ -167,24 +210,69 @@ superpowers:
     > git fetch mislav
     > git cherry-pick SHA
 
+### git am, git apply
+
+    $ git am https://github.com/defunkt/hub/pull/55
+    > curl https://github.com/defunkt/hub/pull/55.patch -o /tmp/55.patch
+    > git am /tmp/55.patch
+
+    $ git am --ignore-whitespace https://github.com/davidbalbert/hub/commit/fdb9921
+    > curl https://github.com/davidbalbert/hub/commit/fdb9921.patch -o /tmp/fdb9921.patch
+    > git am --ignore-whitespace /tmp/fdb9921.patch
+
+    $ git apply https://gist.github.com/8da7fb575debd88c54cf
+    > curl https://gist.github.com/8da7fb575debd88c54cf.txt -o /tmp/gist-8da7fb575debd88c54cf.txt
+    > git apply /tmp/gist-8da7fb575debd88c54cf.txt
+
 ### git fork
 
     $ git fork
-    ... hardcore forking action ...
+    [ repo forked on GitHub ]
     > git remote add -f YOUR_USER git@github.com:YOUR_USER/CURRENT_REPO.git
 
-Forks the original repo on GitHub and adds the new remote under your
-username. It requires your GitHub token to be present; see "GitHub
-login" below for details.
+### git pull-request
+
+    # while on a topic branch called "feature":
+    $ git pull-request
+    [ opens text editor to edit title & body for the request ]
+    [ opened pull request on GitHub for "YOUR_USER:feature" ]
+
+    # explicit title, pull base & head:
+    $ git pull-request "I've implemented feature X" -b defunkt:master -h mislav:feature
+
+    $ git pull-request -i 123
+    [ attached pull request to issue #123 ]
+
+### git checkout
+
+    $ git checkout https://github.com/defunkt/hub/pull/73
+    > git remote add -f -t feature git://github:com/mislav/hub.git
+    > git checkout --track -B mislav-feature mislav/feature
+
+    $ git checkout https://github.com/defunkt/hub/pull/73 custom-branch-name
+
+### git merge
+
+    $ git merge https://github.com/defunkt/hub/pull/73
+    > git fetch git://github.com/mislav/hub.git +refs/heads/feature:refs/remotes/mislav/feature
+    > git merge mislav/feature --no-ff -m 'Merge pull request #73 from mislav/feature...'
 
 ### git create
 
     $ git create
-    ... hardcore creating action ...
+    [ repo created on GitHub ]
     > git remote add origin git@github.com:YOUR_USER/CURRENT_REPO.git
 
-Creates a new public github repository and adds the remote `origin` at
-"git@github.com:<USER>/<REPOSITORY>.git"
+    # with description:
+    $ git create -d 'It shall be mine, all mine!'
+
+    $ git create recipes
+    [ repo created on GitHub ]
+    > git remote add origin git@github.com:YOUR_USER/recipes.git
+
+    $ git create sinatra/recipes
+    [ repo created in GitHub organization ]
+    > git remote add origin git@github.com:sinatra/recipes.git
 
 ### git init
 
@@ -204,11 +292,17 @@ Creates a new public github repository and adds the remote `origin` at
     $ git browse
     > open https://github.com/YOUR_USER/CURRENT_REPO
 
+    $ git browse -- commit/SHA
+    > open https://github.com/YOUR_USER/CURRENT_REPO/commit/SHA
+
     $ git browse -- issues
     > open https://github.com/YOUR_USER/CURRENT_REPO/issues
 
     $ git browse schacon/ticgit
     > open https://github.com/schacon/ticgit
+
+    $ git browse schacon/ticgit commit/SHA
+    > open https://github.com/schacon/ticgit/commit/SHA
 
     $ git browse resque
     > open https://github.com/YOUR_USER/resque
@@ -238,8 +332,8 @@ Creates a new public github repository and adds the remote `origin` at
     $ hub submodule add -p wycats/bundler vendor/bundler
     > git submodule add git@github.com:wycats/bundler.git vendor/bundler
 
-    $ hub submodule add -b ryppl ryppl/pip vendor/pip
-    > git submodule add -b ryppl git://github.com/ryppl/pip.git vendor/pip
+    $ hub submodule add -b ryppl --name pip ryppl/pip vendor/pip
+    > git submodule add -b ryppl --name pip git://github.com/ryppl/pip.git vendor/pip
 
 
 ### git help
@@ -250,102 +344,74 @@ Creates a new public github repository and adds the remote `origin` at
     > (hub man page)
 
 
-GitHub Login
-------------
-
-To get the most out of `hub`, you'll want to ensure your GitHub login
-is stored locally in your Git config or environment variables.
-
-To test it run this:
-
-    $ git config --global github.user
-
-If you see nothing, you need to set the config setting:
-
-    $ git config --global github.user YOUR_USER
-
-For commands that require write access to GitHub (such as `fork`), you'll want to
-setup "github.token" as well. See [local GitHub config guide][2] for more information.
-
-Want to use environment variables instead of a local gitconfig?
-
-* `GITHUB_USER`  - If set, this will be used instead of the `github.user` config
-                   value to determine your GitHub username.
-* `GITHUB_TOKEN` - If set, this will be used instead of the `github.token` config
-                   value to determine your GitHub API token.
-
 Configuration
 -------------
 
-If you prefer `http://` clones to `git://` clones, you can set the
-`hub.http-clone` option to true using `git-config`.
+### GitHub OAuth authentication
 
-For example:
+Hub will prompt for GitHub username & password the first time it needs to access
+the API and exchange it for an OAuth token, which it saves in "~/.config/hub".
 
-    $ git clone defunkt/repl
-    < git clone >
-    $ git config --global --bool hub.http-clone true
-    $ git clone defunkt/repl
-    < http clone >
+### HTTPS instead of git protocol
 
-Or you can enter this manually into your `~/.gitconfig` file:
+If you prefer using the HTTPS protocol for GitHub repositories instead of the git
+protocol for read and ssh for write, you can set "hub.protocol" to "https".
 
-    $ cat ~/.gitconfig
-    [hub]
-      http-clone = yes
+~~~ sh
+# default behavior
+$ git clone defunkt/repl
+< git clone >
 
-
-Prior Art
----------
-
-These projects also aim to either improve git or make interacting with
-GitHub simpler:
-
-* [eg](http://www.gnome.org/~newren/eg/)
-* [github-gem](http://github.com/defunkt/github-gem)
-* [gh](http://github.com/visionmedia/gh)
+# opt into HTTPS:
+$ git config --global hub.protocol https
+$ git clone defunkt/repl
+< https clone >
+~~~
 
 
 Contributing
 ------------
 
-Once you've made your great commits:
+These instructions assume that _you already have hub installed_ and aliased as
+`git` (see "Aliasing").
 
-1. [Fork][0] hub
-2. Create a topic branch - `git checkout -b my_branch`
-3. Push to your branch - `git push origin my_branch`
-4. Create an [Issue][1] with a link to your branch
-5. That's it!
+1. Clone hub:  
+    `git clone defunkt/hub && cd hub`
+1. Ensure Bundler is installed:  
+    `which bundle || gem install bundler`
+1. Install development dependencies:  
+    `bundle install`
+2. Verify that existing tests pass:  
+    `bundle exec rake`
+3. Create a topic branch:  
+    `git checkout -b feature`
+4. **Make your changes.** (It helps a lot if you write tests first.)
+5. Verify that tests still pass:  
+    `bundle exec rake`
+6. Fork hub on GitHub (adds a remote named "YOUR_USER"):  
+    `git fork`
+7. Push to your fork:  
+    `git push -u YOUR_USER feature`
+8. Open a pull request describing your changes:  
+    `git pull-request`
 
-### Development Gems
-You will need the following gems (and their dependencies) to
-contribute to `hub`:
-
-* `rake` (`gem install rake`)
-* `kicker` (`gem install kicker`)
-* `turn` (`gem install turn`)
-* `mg` (`gem install mg`)
-* `ronn` (`gem install ronn`)
-* `webmock` (`gem install webmock`)
 
 Meta
 ----
 
-* Code: `git clone git://github.com/defunkt/hub.git`
-* Home: <http://github.com/defunkt/hub>
-* Bugs: <http://github.com/defunkt/hub/issues>
-* List: <http://groups.google.com/group/github>
-* Test: <http://runcoderun.com/defunkt/hub>
-* Gems: <http://gemcutter.org/gems/hub>
+* Home: <https://github.com/defunkt/hub>
+* Bugs: <https://github.com/defunkt/hub/issues>
+* Gem: <https://rubygems.org/gems/hub>
+* Authors: <https://github.com/defunkt/hub/contributors>
+
+### Prior art
+
+These projects also aim to either improve git or make interacting with
+GitHub simpler:
+
+* [eg](http://www.gnome.org/~newren/eg/)
+* [github-gem](https://github.com/defunkt/github-gem)
 
 
-Authors
--------
-
-<https://github.com/defunkt/hub/contributors>
-
-[0]: http://help.github.com/forking/
-[1]: http://github.com/defunkt/hub/issues
 [speed]: http://gist.github.com/284823
-[2]: http://github.com/guides/local-github-config
 [gc]: https://twitter.com/brynary/status/49560668994674688

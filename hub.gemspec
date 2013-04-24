@@ -1,16 +1,19 @@
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
-require 'hub/version'
+# encoding: utf-8
+require File.expand_path('../lib/hub/version', __FILE__)
 
 Gem::Specification.new do |s|
   s.name              = "hub"
   s.version           = Hub::VERSION
-  s.date              = Time.now.strftime('%Y-%m-%d')
-  s.summary           = "hub introduces git to GitHub"
-  s.homepage          = "http://github.com/defunkt/hub"
-  s.email             = "chris@ozmm.org"
-  s.authors           = [ "Chris Wanstrath" ]
+  s.summary           = "Command-line wrapper for git and GitHub"
+  s.homepage          = "http://defunkt.io/hub/"
+  s.email             = "mislav.marohnic@gmail.com"
+  s.authors           = [ "Chris Wanstrath", "Mislav Marohnić" ]
+  s.license           = "MIT"
 
-  s.files             = %w( README.md Rakefile LICENSE )
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'webmock'
+
+  s.files             = %w( README.md Rakefile LICENSE HISTORY.md )
   s.files            += Dir.glob("lib/**/*")
   s.files            += Dir.glob("bin/**/*")
   s.files            += Dir.glob("man/**/*")
@@ -49,7 +52,7 @@ desc
        fashioned way.  Faster  startup  time,  you see.
 
        Check  out  the  installation  instructions  at
-       http://github.com/defunkt/hub#readme  under the
+       https://github.com/defunkt/hub#readme  under the
        "Standalone" section.
 
        Cheers,

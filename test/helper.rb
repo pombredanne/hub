@@ -1,20 +1,32 @@
 require 'test/unit'
-
-begin
-  require 'redgreen'
-rescue LoadError
-end
-
-$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'hub'
-require 'hub/standalone'
 
-# We're looking for `open` in the tests.
+# We're checking for `open` in our tests
 ENV['BROWSER'] = 'open'
 
 # Setup path with fake executables in case a test hits them
 fakebin_dir = File.expand_path('../fakebin', __FILE__)
 ENV['PATH'] = "#{fakebin_dir}:#{ENV['PATH']}"
+
+# Use an isolated config file in testing
+tmp_dir = ENV['TMPDIR'] || ENV['TEMP'] || '/tmp'
+ENV['HUB_CONFIG'] = File.join(tmp_dir, 'hub-test-config')
+
+# Disable `abort` and `exit` in the main test process, but allow it in
+# subprocesses where we need to test does a command properly bail out.
+Hub::Commands.extend Module.new {
+  main_pid = Process.pid
+
+  [:abort, :exit].each do |method|
+    define_method method do |*args|
+      if Process.pid == main_pid
+        raise "#{method} is disabled"
+      else
+        super(*args)
+      end
+    end
+  end
+}
 
 class Test::Unit::TestCase
   # Shortcut for creating a `Hub` instance. Pass it what you would
@@ -23,7 +35,13 @@ class Test::Unit::TestCase
   # shell: hub clone rtomayko/tilt
   #  test: Hub("clone rtomayko/tilt")
   def Hub(args)
-    Hub::Runner.new(*args.split(' '))
+    runner = Hub::Runner.new(*args.split(' ').map {|a| a.freeze })
+    runner.args.commands.each do |cmd|
+      if Array === cmd and invalid = cmd.find {|c| !c.respond_to? :to_str }
+        raise "#{invalid.inspect} is not a string (in #{cmd.join(' ').inspect})"
+      end
+    end
+    runner
   end
 
   # Shortcut for running the `hub` command in a subprocess. Returns
@@ -81,22 +99,6 @@ class Test::Unit::TestCase
     assert !cmd.args.changed?, "arguments were not supposed to change: #{cmd.args.inspect}"
   end
 
-  # Asserts that `hub` will show a specific alias command for a
-  # specific shell.
-  #
-  # e.g.
-  #  assert_alias_command "sh", "alias git=hub"
-  #
-  # Here we are saying that this:
-  #   $ hub alias sh
-  # Should display this:
-  #   Run this in your shell to start using `hub` as `git`:
-  #     alias git=hub
-  def assert_alias_command(shell, command)
-    expected = "Run this in your shell to start using `hub` as `git`:\n  %s\n"
-    assert_equal(expected % command, hub("alias #{shell}"))
-  end
-
   # Asserts that `haystack` includes `needle`.
   def assert_includes(needle, haystack)
     assert haystack.include?(needle),
@@ -107,5 +109,23 @@ class Test::Unit::TestCase
   def assert_not_includes(needle, haystack)
     assert !haystack.include?(needle),
       "didn't expect #{needle.inspect} in #{haystack.inspect}"
+  end
+
+  # Version of assert_equal tailored for big output
+  def assert_output(expected, command)
+    output = hub(command) { ENV['GIT'] = 'echo' }
+    assert expected == output,
+      "expected:\n#{expected}\ngot:\n#{output}"
+  end
+
+  def edit_hub_config
+    config = ENV['HUB_CONFIG']
+    if File.exist? config
+      data = YAML.load File.read(config)
+    else
+      data = {}
+    end
+    yield data
+    File.open(config, 'w') { |cfg| cfg << YAML.dump(data) }
   end
 end

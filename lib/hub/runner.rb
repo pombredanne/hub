@@ -31,7 +31,7 @@ module Hub
       args.commands.map do |cmd|
         if cmd.respond_to?(:join)
           # a simplified `Shellwords.join` but it's OK since this is only used to inspect
-          cmd.map { |c| (c.index(' ') || c.empty?) ? "'#{c}'" : c }.join(' ')
+          cmd.map { |arg| arg = arg.to_s; (arg.index(' ') || arg.empty?) ? "'#{arg}'" : arg }.join(' ')
         else
           cmd.to_s
         end
@@ -45,18 +45,15 @@ module Hub
     # allows commands to print an error message and cancel their own
     # execution if they don't make sense.
     def execute
-      unless args.skip?
-        if args.chained?
-          execute_command_chain
-        else
-          exec(*args.to_exec)
-        end
+      if args.noop?
+        puts commands
+      elsif not args.skip?
+        execute_command_chain args.commands
       end
     end
 
     # Runs multiple commands in succession; exits at first failure.
-    def execute_command_chain
-      commands = args.commands
+    def execute_command_chain commands
       commands.each_with_index do |cmd, i|
         if cmd.respond_to?(:call) then cmd.call
         elsif i == commands.length - 1
@@ -65,6 +62,15 @@ module Hub
         else
           exit($?.exitstatus) unless system(*cmd)
         end
+      end
+    end
+
+    # Special-case `echo` for Windows
+    def exec *args
+      if args.first == 'echo' && Context::windows?
+        puts args[1..-1].join(' ')
+      else
+        super
       end
     end
   end
